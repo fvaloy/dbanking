@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/fvaloy/dbanking/payment/model"
+	"github.com/fvaloy/dbanking/payment/internal/model"
 	_ "github.com/lib/pq"
 )
 
@@ -23,7 +23,7 @@ func NewPaymentRepository(db *sql.DB) *PaymentRepository {
 	return &PaymentRepository{db: db}
 }
 
-func (r *PaymentRepository) Create(req CreatePaymentRequest) (string, error) {
+func (r *PaymentRepository) Create(req *CreatePaymentRequest) (string, error) {
 	var id string
 	err := r.db.QueryRow(`
 		INSERT INTO payments (user_id, amount, currency, reference, status)

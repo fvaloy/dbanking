@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/fvaloy/dbanking/payment/internal/repository"
+	"github.com/fvaloy/dbanking/payment/internal/server"
 	"github.com/fvaloy/dbanking/payment/pb"
-	"github.com/fvaloy/dbanking/payment/repository"
-	"github.com/fvaloy/dbanking/payment/service"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	repo := repository.NewPaymentRepository(db)
-	server := service.NewPaymentServer(repo)
+	server := server.NewPaymentServer(repo)
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {

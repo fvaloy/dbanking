@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/fvaloy/dbanking/payment/internal/repository"
 	"github.com/fvaloy/dbanking/payment/pb"
-	"github.com/fvaloy/dbanking/payment/repository"
 )
 
 type PaymentServer struct {
@@ -23,7 +23,7 @@ func (s *PaymentServer) CreatePayment(ctx context.Context, req *pb.CreatePayment
 	reference := fmt.Sprintf("REF-%d", rand.New(
 		rand.NewSource(
 			time.Now().UnixNano())).Intn(1000000))
-	id, err := s.repo.Create(repository.CreatePaymentRequest{
+	id, err := s.repo.Create(&repository.CreatePaymentRequest{
 		UserID:    req.UserId,
 		Amount:    int(req.Amount),
 		Currency:  req.Currency,
