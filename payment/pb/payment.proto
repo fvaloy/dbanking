@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "/pb;pb";
+
+service PaymentService {
+    rpc CreatePayment(CreatePaymentRequest) returns (PaymentResponse);
+    rpc GetPaymentByID(GetPaymentRequest) returns (PaymentResponse);
+    rpc ListPaymentsByStatus(ListPaymentsRequest) returns (ListPaymentsResponse);
+}
+
+message CreatePaymentRequest {
+    string user_id = 1;
+    int32 amount = 2;
+    string currency = 3;
+}
+
+message GetPaymentRequest {
+    string payment_id = 1;
+}
+
+message ListPaymentsRequest {
+    string status = 1;
+}
+
+message PaymentResponse {
+    string payment_id = 1;
+    string status = 2;
+    int32 amount = 3;
+    string currency = 4;
+    string reference = 5;
+}
+
+message ListPaymentsResponse {
+    repeated PaymentResponse payments = 1;
+}

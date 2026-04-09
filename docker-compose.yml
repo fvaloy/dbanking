@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  payment:
+    build: ./payment
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_CONN=postgres://postgres:postgres@dbanking-db:5432/dbanking?sslmode=disable
+      - PORT=8080
+    depends_on:
+      - dbanking-db
+
+  dbanking-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dbanking
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql-scripts:/docker-entrypoint-initdb.d
