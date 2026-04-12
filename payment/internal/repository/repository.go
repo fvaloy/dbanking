@@ -38,10 +38,9 @@ func (r *PaymentRepository) Create(req *CreatePaymentRequest) (string, error) {
 func (r *PaymentRepository) GetByID(id string) (*model.Payment, error) {
 	var p model.Payment
 	err := r.db.QueryRow(`
-		SELECT id, user_id, amount, currency, reference, status, created_at
+		SELECT id, amount, currency, reference, status, created_at
 		FROM payments WHERE id = $1
 	`, id).Scan(&p.ID,
-		&p.UserID,
 		&p.Amount,
 		&p.Currency,
 		&p.Reference,
@@ -58,7 +57,7 @@ func (r *PaymentRepository) GetByID(id string) (*model.Payment, error) {
 
 func (r *PaymentRepository) ListByStatus(s string) ([]*model.Payment, error) {
 	rows, err := r.db.Query(`
-		SELECT id, user_id, amount, currency, reference, status, created_at
+		SELECT id, amount, currency, reference, status, created_at
 		FROM payments WHERE status = $1
 	`, s)
 	if err != nil {
@@ -70,7 +69,6 @@ func (r *PaymentRepository) ListByStatus(s string) ([]*model.Payment, error) {
 	for rows.Next() {
 		var p model.Payment
 		err := rows.Scan(&p.ID,
-			&p.UserID,
 			&p.Amount,
 			&p.Currency,
 			&p.Reference,

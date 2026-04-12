@@ -2,8 +2,6 @@ CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY key default gen_random_uuid(),
   amount INT NOT NULL,
   currency VARCHAR(3) NOT NULL,
-  description TEXT,
-  user_id VARCHAR(50) UNIQUE,
   reference VARCHAR(50) UNIQUE,
   status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT now(),
