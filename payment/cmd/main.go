@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fvaloy/dbanking/payment/internal/broker"
 	"github.com/fvaloy/dbanking/payment/internal/repository"
 	"github.com/fvaloy/dbanking/payment/internal/server"
 	"github.com/fvaloy/dbanking/payment/pb"
@@ -53,8 +54,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	rabbitURL := os.Getenv("RABBITMQ_URL")
+	if rabbitURL == "" {
+		rabbitURL = "amqp://guest:guest@localhost:5672/"
+	}
+
+	brokerClient, err := connectRabbitMQ(rabbitURL)
+	if err != nil {
+		log.Printf("Warning: Could not connect to RabbitMQ after retries: %v. Running without message broker.", err)
+		brokerClient = nil
+	} else {
+		defer brokerClient.Close()
+	}
+
 	repo := repository.NewPaymentRepository(db)
-	server := server.NewPaymentServer(repo)
+	paymentServer := server.NewPaymentServer(repo, brokerClient)
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -62,11 +76,25 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterPaymentServiceServer(grpcServer, server)
+	pb.RegisterPaymentServiceServer(grpcServer, paymentServer)
 	reflection.Register(grpcServer)
 
 	log.Printf("Payment Service listening on :%s", port)
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func connectRabbitMQ(rabbitURL string) (*broker.RabbitMQClient, error) {
+	var brokerClient *broker.RabbitMQClient
+	var err error
+	for i := 0; i < 10; i++ {
+		brokerClient, err = broker.NewRabbitMQClient(rabbitURL, "payments", "payment.created")
+		if err == nil {
+			return brokerClient, nil
+		}
+		log.Printf("Waiting for RabbitMQ connection (%d/10): %v", i+1, err)
+		time.Sleep(2 * time.Second)
+	}
+	return nil, err
 }

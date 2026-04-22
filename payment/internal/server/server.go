@@ -3,23 +3,30 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
+	"github.com/fvaloy/dbanking/payment/internal/broker"
 	"github.com/fvaloy/dbanking/payment/internal/repository"
 	"github.com/fvaloy/dbanking/payment/pb"
 )
 
 type PaymentServer struct {
 	pb.UnimplementedPaymentServiceServer
-	repo *repository.PaymentRepository
+	repo   *repository.PaymentRepository
+	broker *broker.RabbitMQClient
 }
 
-func NewPaymentServer(repo *repository.PaymentRepository) *PaymentServer {
-	return &PaymentServer{repo: repo}
+func NewPaymentServer(
+	repo *repository.PaymentRepository,
+	brokerClient *broker.RabbitMQClient) *PaymentServer {
+	return &PaymentServer{repo: repo, broker: brokerClient}
 }
 
-func (s *PaymentServer) CreatePayment(ctx context.Context, req *pb.CreatePaymentRequest) (*pb.PaymentResponse, error) {
+func (s *PaymentServer) CreatePayment(
+	ctx context.Context,
+	req *pb.CreatePaymentRequest) (*pb.PaymentResponse, error) {
 	reference := fmt.Sprintf("REF-%d", rand.New(
 		rand.NewSource(
 			time.Now().UnixNano())).Intn(1000000))
@@ -33,6 +40,20 @@ func (s *PaymentServer) CreatePayment(ctx context.Context, req *pb.CreatePayment
 		return nil, fmt.Errorf("failed to create payment: %v", err)
 	}
 
+	if s.broker != nil {
+		event := &broker.PaymentEvent{
+			PaymentID: id,
+			UserID:    req.UserId,
+			Amount:    int(req.Amount),
+			Currency:  req.Currency,
+			Reference: reference,
+			Status:    "pending",
+		}
+		if err := s.broker.PublishPaymentCreated(event); err != nil {
+			log.Printf("Warning: failed to publish payment event: %v", err)
+		}
+	}
+
 	return &pb.PaymentResponse{
 		PaymentId: id,
 		Status:    "pending",
@@ -42,7 +63,9 @@ func (s *PaymentServer) CreatePayment(ctx context.Context, req *pb.CreatePayment
 	}, nil
 }
 
-func (s *PaymentServer) GetPaymentByID(ctx context.Context, req *pb.GetPaymentRequest) (*pb.PaymentResponse, error) {
+func (s *PaymentServer) GetPaymentByID(
+	ctx context.Context,
+	req *pb.GetPaymentRequest) (*pb.PaymentResponse, error) {
 	p, err := s.repo.GetByID(req.PaymentId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get payment: %v", err)
@@ -56,7 +79,9 @@ func (s *PaymentServer) GetPaymentByID(ctx context.Context, req *pb.GetPaymentRe
 	}, nil
 }
 
-func (s *PaymentServer) ListPaymentsByStatus(ctx context.Context, req *pb.ListPaymentsRequest) (*pb.ListPaymentsResponse, error) {
+func (s *PaymentServer) ListPaymentsByStatus(
+	ctx context.Context,
+	req *pb.ListPaymentsRequest) (*pb.ListPaymentsResponse, error) {
 	payments, err := s.repo.ListByStatus(req.Status)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list payments: %v", err)

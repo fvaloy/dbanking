@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY key default gen_random_uuid(),
+  user_id UUID NOT NULL,
   amount INT NOT NULL,
   currency VARCHAR(3) NOT NULL,
   reference VARCHAR(50) UNIQUE,
