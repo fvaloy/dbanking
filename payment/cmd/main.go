@@ -89,7 +89,7 @@ func connectRabbitMQ(rabbitURL string) (*broker.RabbitMQClient, error) {
 	var brokerClient *broker.RabbitMQClient
 	var err error
 	for i := 0; i < 10; i++ {
-		brokerClient, err = broker.NewRabbitMQClient(rabbitURL, "payments", "payment.created")
+		brokerClient, err = broker.NewRabbitMQClient(rabbitURL, "payments")
 		if err == nil {
 			return brokerClient, nil
 		}

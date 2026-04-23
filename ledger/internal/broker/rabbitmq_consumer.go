@@ -49,7 +49,7 @@ func NewRabbitMQConsumer(
 
 	err = channel.ExchangeDeclare(
 		exchange,
-		amqp.ExchangeTopic,
+		amqp.ExchangeFanout,
 		true,
 		false,
 		false,

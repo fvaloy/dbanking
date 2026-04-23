@@ -18,21 +18,18 @@ type PaymentEvent struct {
 }
 
 type RabbitMQClient struct {
-	conn      *amqp.Connection
-	channel   *amqp.Channel
-	exchange  string
-	queueName string
+	conn     *amqp.Connection
+	channel  *amqp.Channel
+	exchange string
 }
 
 const (
-	PaymentCreatedRoutingKey = "payment.created"
-	PaymentExchange          = "payments"
+	PaymentExchange = "payments"
 )
 
 func NewRabbitMQClient(
 	rabbitURL,
-	exchange,
-	queueName string) (*RabbitMQClient, error) {
+	exchange string) (*RabbitMQClient, error) {
 	conn, err := amqp.Dial(rabbitURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
@@ -46,7 +43,7 @@ func NewRabbitMQClient(
 
 	err = channel.ExchangeDeclare(
 		exchange,
-		amqp.ExchangeTopic,
+		amqp.ExchangeFanout,
 		true,
 		false,
 		false,
@@ -59,38 +56,10 @@ func NewRabbitMQClient(
 		return nil, fmt.Errorf("failed to declare exchange: %w", err)
 	}
 
-	q, err := channel.QueueDeclare(
-		queueName,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		channel.Close()
-		conn.Close()
-		return nil, fmt.Errorf("failed to declare queue: %w", err)
-	}
-
-	err = channel.QueueBind(
-		q.Name,
-		PaymentCreatedRoutingKey,
-		exchange,
-		false,
-		nil,
-	)
-	if err != nil {
-		channel.Close()
-		conn.Close()
-		return nil, fmt.Errorf("failed to bind queue: %w", err)
-	}
-
 	return &RabbitMQClient{
-		conn:      conn,
-		channel:   channel,
-		exchange:  exchange,
-		queueName: queueName,
+		conn:     conn,
+		channel:  channel,
+		exchange: exchange,
 	}, nil
 }
 
@@ -102,7 +71,7 @@ func (r *RabbitMQClient) PublishPaymentCreated(event *PaymentEvent) error {
 
 	err = r.channel.Publish(
 		r.exchange,
-		PaymentCreatedRoutingKey,
+		"",
 		false,
 		false,
 		amqp.Publishing{
