@@ -78,7 +78,7 @@ func connectRabbitMQ(rabbitURL string) (*broker.RabbitMQConsumer, error) {
 	var consumer *broker.RabbitMQConsumer
 	var err error
 	for i := 0; i < 10; i++ {
-		consumer, err = broker.NewRabbitMQConsumer(rabbitURL, "payments", "payment.created")
+		consumer, err = broker.NewRabbitMQConsumer(rabbitURL, "payments", "payment.created.ledger")
 		if err == nil {
 			log.Println("Connected to RabbitMQ successfully")
 			return consumer, nil

@@ -28,7 +28,7 @@ type RabbitMQConsumer struct {
 }
 
 const (
-	PaymentCreatedRoutingKey = "payment.created"
+	PaymentCreatedRoutingKey = "payment.created.ledger"
 	PaymentExchange          = "payments"
 )
 
