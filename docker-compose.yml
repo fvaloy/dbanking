@@ -36,3 +36,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ledger:
+    build: ./ledger
+    environment:
+      - DB_CONN=postgres://postgres:postgres@dbanking-db:5432/dbanking?sslmode=disable
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      - dbanking-db
+      - rabbitmq
