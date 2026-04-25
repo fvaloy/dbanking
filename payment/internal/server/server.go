@@ -48,6 +48,7 @@ func (s *PaymentServer) CreatePayment(
 			Currency:  req.Currency,
 			Reference: reference,
 			Status:    "pending",
+			Event:     broker.PaymentCreatedRoutingKey,
 		}
 		if err := s.broker.PublishPaymentCreated(event); err != nil {
 			log.Printf("Warning: failed to publish payment event: %v", err)
@@ -129,6 +130,7 @@ func (s *PaymentServer) MarkPaymentSucceeded(
 			Currency:  payment.Currency,
 			Reference: payment.Reference,
 			Status:    "succeeded",
+			Event:     broker.PaymentSucceededRoutingKey,
 		}
 		if err := s.broker.PublishPaymentSucceeded(event); err != nil {
 			log.Printf("Warning: failed to publish payment succeeded event: %v", err)

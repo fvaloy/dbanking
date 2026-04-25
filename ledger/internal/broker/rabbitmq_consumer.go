@@ -28,7 +28,7 @@ type RabbitMQConsumer struct {
 }
 
 const (
-	PaymentCreatedRoutingKey = "payment.created.ledger"
+	PaymentCreatedRoutingKey = "payment.created"
 	PaymentExchange          = "payments"
 )
 
@@ -49,7 +49,7 @@ func NewRabbitMQConsumer(
 
 	err = channel.ExchangeDeclare(
 		exchange,
-		amqp.ExchangeFanout,
+		amqp.ExchangeTopic,
 		true,
 		false,
 		false,
