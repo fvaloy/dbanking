@@ -7,13 +7,11 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o payment ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/bank ./cmd/main.go
 
 FROM alpine:latest
 
 WORKDIR /root/
-COPY --from=builder /app/payment .
+COPY --from=builder /app/bank .
 
-EXPOSE ${PORT}
-
-CMD ["./payment"]
+CMD ["./bank"]

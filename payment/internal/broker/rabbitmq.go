@@ -15,7 +15,6 @@ type PaymentEvent struct {
 	Currency  string `json:"currency"`
 	Reference string `json:"reference"`
 	Status    string `json:"status"`
-	Event     string `json:"event"`
 }
 
 type RabbitMQClient struct {
@@ -66,7 +65,7 @@ func NewRabbitMQClient(
 	}, nil
 }
 
-func (r *RabbitMQClient) publishEvent(event *PaymentEvent) error {
+func (r *RabbitMQClient) publishEvent(routingKey string, event *PaymentEvent) error {
 	body, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
@@ -74,7 +73,7 @@ func (r *RabbitMQClient) publishEvent(event *PaymentEvent) error {
 
 	err = r.channel.Publish(
 		r.exchange,
-		event.Event,
+		routingKey,
 		false,
 		false,
 		amqp.Publishing{
@@ -86,16 +85,16 @@ func (r *RabbitMQClient) publishEvent(event *PaymentEvent) error {
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	log.Printf("Published payment event: %s status=%s payment=%s", event.Event, event.Status, event.PaymentID)
+	log.Printf("Published payment event: %s status=%s payment=%s", routingKey, event.Status, event.PaymentID)
 	return nil
 }
 
 func (r *RabbitMQClient) PublishPaymentCreated(event *PaymentEvent) error {
-	return r.publishEvent(event)
+	return r.publishEvent(PaymentCreatedRoutingKey, event)
 }
 
 func (r *RabbitMQClient) PublishPaymentSucceeded(event *PaymentEvent) error {
-	return r.publishEvent(event)
+	return r.publishEvent(PaymentSucceededRoutingKey, event)
 }
 
 func (r *RabbitMQClient) Close() error {

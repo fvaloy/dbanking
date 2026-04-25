@@ -45,3 +45,14 @@ services:
     depends_on:
       - dbanking-db
       - rabbitmq
+
+  bank:
+    build: ./bank
+    environment:
+      - DB_CONN=postgres://postgres:postgres@dbanking-db:5432/dbanking?sslmode=disable
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PAYMENT_SERVICE_ADDR=payment:8080
+    depends_on:
+      - dbanking-db
+      - rabbitmq
+      - payment
