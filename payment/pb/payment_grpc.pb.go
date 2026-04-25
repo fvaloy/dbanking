@@ -22,6 +22,7 @@ const (
 	PaymentService_CreatePayment_FullMethodName        = "/payment.PaymentService/CreatePayment"
 	PaymentService_GetPaymentByID_FullMethodName       = "/payment.PaymentService/GetPaymentByID"
 	PaymentService_ListPaymentsByStatus_FullMethodName = "/payment.PaymentService/ListPaymentsByStatus"
+	PaymentService_MarkPaymentSucceeded_FullMethodName = "/payment.PaymentService/MarkPaymentSucceeded"
 )
 
 // PaymentServiceClient is the client API for PaymentService service.
@@ -31,6 +32,7 @@ type PaymentServiceClient interface {
 	CreatePayment(ctx context.Context, in *CreatePaymentRequest, opts ...grpc.CallOption) (*PaymentResponse, error)
 	GetPaymentByID(ctx context.Context, in *GetPaymentRequest, opts ...grpc.CallOption) (*PaymentResponse, error)
 	ListPaymentsByStatus(ctx context.Context, in *ListPaymentsRequest, opts ...grpc.CallOption) (*ListPaymentsResponse, error)
+	MarkPaymentSucceeded(ctx context.Context, in *MarkPaymentSucceededRequest, opts ...grpc.CallOption) (*PaymentResponse, error)
 }
 
 type paymentServiceClient struct {
@@ -71,6 +73,16 @@ func (c *paymentServiceClient) ListPaymentsByStatus(ctx context.Context, in *Lis
 	return out, nil
 }
 
+func (c *paymentServiceClient) MarkPaymentSucceeded(ctx context.Context, in *MarkPaymentSucceededRequest, opts ...grpc.CallOption) (*PaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PaymentResponse)
+	err := c.cc.Invoke(ctx, PaymentService_MarkPaymentSucceeded_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PaymentServiceServer is the server API for PaymentService service.
 // All implementations must embed UnimplementedPaymentServiceServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type PaymentServiceServer interface {
 	CreatePayment(context.Context, *CreatePaymentRequest) (*PaymentResponse, error)
 	GetPaymentByID(context.Context, *GetPaymentRequest) (*PaymentResponse, error)
 	ListPaymentsByStatus(context.Context, *ListPaymentsRequest) (*ListPaymentsResponse, error)
+	MarkPaymentSucceeded(context.Context, *MarkPaymentSucceededRequest) (*PaymentResponse, error)
 	mustEmbedUnimplementedPaymentServiceServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedPaymentServiceServer) GetPaymentByID(context.Context, *GetPay
 }
 func (UnimplementedPaymentServiceServer) ListPaymentsByStatus(context.Context, *ListPaymentsRequest) (*ListPaymentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListPaymentsByStatus not implemented")
+}
+func (UnimplementedPaymentServiceServer) MarkPaymentSucceeded(context.Context, *MarkPaymentSucceededRequest) (*PaymentResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method MarkPaymentSucceeded not implemented")
 }
 func (UnimplementedPaymentServiceServer) mustEmbedUnimplementedPaymentServiceServer() {}
 func (UnimplementedPaymentServiceServer) testEmbeddedByValue()                        {}
@@ -172,6 +188,24 @@ func _PaymentService_ListPaymentsByStatus_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PaymentService_MarkPaymentSucceeded_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkPaymentSucceededRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).MarkPaymentSucceeded(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PaymentService_MarkPaymentSucceeded_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).MarkPaymentSucceeded(ctx, req.(*MarkPaymentSucceededRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PaymentService_ServiceDesc is the grpc.ServiceDesc for PaymentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var PaymentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListPaymentsByStatus",
 			Handler:    _PaymentService_ListPaymentsByStatus_Handler,
+		},
+		{
+			MethodName: "MarkPaymentSucceeded",
+			Handler:    _PaymentService_MarkPaymentSucceeded_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

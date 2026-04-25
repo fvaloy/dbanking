@@ -8,6 +8,7 @@ service PaymentService {
     rpc CreatePayment(CreatePaymentRequest) returns (PaymentResponse);
     rpc GetPaymentByID(GetPaymentRequest) returns (PaymentResponse);
     rpc ListPaymentsByStatus(ListPaymentsRequest) returns (ListPaymentsResponse);
+    rpc MarkPaymentSucceeded(MarkPaymentSucceededRequest) returns (PaymentResponse);
 }
 
 message CreatePaymentRequest {
@@ -17,6 +18,10 @@ message CreatePaymentRequest {
 }
 
 message GetPaymentRequest {
+    string payment_id = 1;
+}
+
+message MarkPaymentSucceededRequest {
     string payment_id = 1;
 }
 

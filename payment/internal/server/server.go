@@ -98,3 +98,48 @@ func (s *PaymentServer) ListPaymentsByStatus(
 	}
 	return resp, nil
 }
+
+func (s *PaymentServer) MarkPaymentSucceeded(
+	ctx context.Context,
+	req *pb.MarkPaymentSucceededRequest) (*pb.PaymentResponse, error) {
+	payment, err := s.repo.GetByID(req.PaymentId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get payment: %v", err)
+	}
+
+	if payment.Status == "succeeded" {
+		return &pb.PaymentResponse{
+			PaymentId: payment.ID,
+			Status:    payment.Status,
+			Amount:    int32(payment.Amount),
+			Currency:  payment.Currency,
+			Reference: payment.Reference,
+		}, nil
+	}
+
+	if err := s.repo.UpdateStatus(payment.ID, "succeeded"); err != nil {
+		return nil, fmt.Errorf("failed to update payment status: %v", err)
+	}
+
+	if s.broker != nil {
+		event := &broker.PaymentEvent{
+			PaymentID: payment.ID,
+			UserID:    payment.UserID,
+			Amount:    payment.Amount,
+			Currency:  payment.Currency,
+			Reference: payment.Reference,
+			Status:    "succeeded",
+		}
+		if err := s.broker.PublishPaymentSucceeded(event); err != nil {
+			log.Printf("Warning: failed to publish payment succeeded event: %v", err)
+		}
+	}
+
+	return &pb.PaymentResponse{
+		PaymentId: payment.ID,
+		Status:    "succeeded",
+		Amount:    int32(payment.Amount),
+		Currency:  payment.Currency,
+		Reference: payment.Reference,
+	}, nil
+}

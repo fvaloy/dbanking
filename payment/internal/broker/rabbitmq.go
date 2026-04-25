@@ -63,7 +63,7 @@ func NewRabbitMQClient(
 	}, nil
 }
 
-func (r *RabbitMQClient) PublishPaymentCreated(event *PaymentEvent) error {
+func (r *RabbitMQClient) publishEvent(event *PaymentEvent) error {
 	body, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
@@ -83,8 +83,16 @@ func (r *RabbitMQClient) PublishPaymentCreated(event *PaymentEvent) error {
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	log.Printf("Published payment created event: %s", event.PaymentID)
+	log.Printf("Published payment event: %s status=%s", event.PaymentID, event.Status)
 	return nil
+}
+
+func (r *RabbitMQClient) PublishPaymentCreated(event *PaymentEvent) error {
+	return r.publishEvent(event)
+}
+
+func (r *RabbitMQClient) PublishPaymentSucceeded(event *PaymentEvent) error {
+	return r.publishEvent(event)
 }
 
 func (r *RabbitMQClient) Close() error {

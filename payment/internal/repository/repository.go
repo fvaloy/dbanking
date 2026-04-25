@@ -38,9 +38,10 @@ func (r *PaymentRepository) Create(req *CreatePaymentRequest) (string, error) {
 func (r *PaymentRepository) GetByID(id string) (*model.Payment, error) {
 	var p model.Payment
 	err := r.db.QueryRow(`
-		SELECT id, amount, currency, reference, status, created_at
+		SELECT id, user_id, amount, currency, reference, status, created_at
 		FROM payments WHERE id = $1
 	`, id).Scan(&p.ID,
+		&p.UserID,
 		&p.Amount,
 		&p.Currency,
 		&p.Reference,
@@ -57,7 +58,7 @@ func (r *PaymentRepository) GetByID(id string) (*model.Payment, error) {
 
 func (r *PaymentRepository) ListByStatus(s string) ([]*model.Payment, error) {
 	rows, err := r.db.Query(`
-		SELECT id, amount, currency, reference, status, created_at
+		SELECT id, user_id, amount, currency, reference, status, created_at
 		FROM payments WHERE status = $1
 	`, s)
 	if err != nil {
@@ -69,6 +70,7 @@ func (r *PaymentRepository) ListByStatus(s string) ([]*model.Payment, error) {
 	for rows.Next() {
 		var p model.Payment
 		err := rows.Scan(&p.ID,
+			&p.UserID,
 			&p.Amount,
 			&p.Currency,
 			&p.Reference,
@@ -80,4 +82,23 @@ func (r *PaymentRepository) ListByStatus(s string) ([]*model.Payment, error) {
 		payments = append(payments, &p)
 	}
 	return payments, nil
+}
+
+func (r *PaymentRepository) UpdateStatus(id, status string) error {
+	result, err := r.db.Exec(`
+		UPDATE payments SET status = $1, updated_at = now()
+		WHERE id = $2
+	`, status, id)
+	if err != nil {
+		return fmt.Errorf("failed to update payment status: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to determine rows affected: %v", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("payment not found: %s", id)
+	}
+	return nil
 }
