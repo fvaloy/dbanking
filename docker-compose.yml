@@ -56,3 +56,18 @@ services:
       - dbanking-db
       - rabbitmq
       - payment
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+  notification:
+    build: ./notification
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+    depends_on:
+      - rabbitmq
+      - mailhog
