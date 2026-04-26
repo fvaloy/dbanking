@@ -56,6 +56,17 @@ services:
       - dbanking-db
       - rabbitmq
       - payment
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8090:8090"
+    environment:
+      - PAYMENT_SERVICE_ADDR=payment:8080
+      - PORT=8090
+    depends_on:
+      - payment
+
   mailhog:
     image: mailhog/mailhog:latest
     container_name: mailhog
