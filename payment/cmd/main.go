@@ -34,7 +34,7 @@ func main() {
 
 	var db *sql.DB
 	var errDb error
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		db, errDb = sql.Open("postgres", connStr)
 		if errDb == nil && db.Ping() == nil {
 			break
@@ -88,7 +88,7 @@ func main() {
 func connectRabbitMQ(rabbitURL string) (*broker.RabbitMQClient, error) {
 	var brokerClient *broker.RabbitMQClient
 	var err error
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		brokerClient, err = broker.NewRabbitMQClient(rabbitURL, "payments")
 		if err == nil {
 			return brokerClient, nil
